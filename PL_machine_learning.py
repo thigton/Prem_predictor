@@ -67,49 +67,45 @@ def get_fid(rel_dir, *ext):
 CREATE NEW FEATURES IN THE DATA
 """
 def preprocess(df):
-    
-    df = df.dropna(subset=['Date']) 
-   # df[year] = df[year].dropna()  ## NEED TO ONLY DELETE ROWS WHICH ARE MISSING KEY STATS 
-    print('Looking at dataframe ' + str(year))
-    
-    # CONVERT DATE TO DATETIME
-    #df[year]['Date'] = pd.to_datetime(df[year]['Date'], format='%d/%m/%Y')
-    df['Date'] = pd.to_datetime(df['Date'], infer_datetime_format=True, dayfirst=True)
+    df = df.dropna(subset=['Date'])  # Drop empty entries (Not full clean up)
+    df['Date'] = pd.to_datetime(df['Date'], format = " %d/%m/%y") # convert dates to datetime format
+
+def weeknumbers(df):
     # CREATE WEEK NUMBERS AND SUBTRACT STARTING WEEK.  ASSUME THE STARTING WEEK IS AFTER CALANDER WEEK 29
     df['Week_Number'] = df['Date'].dt.week
     df['Week_Number'] = df['Week_Number'] - df[df.Week_Number > 29]['Week_Number'].min() + 1
     # THOSE WEEKS YOU HAVE MADE NEGATIVE ADD 52.
-    df['Week_Number'] = df['Week_Number'].where(df['Week_Number'] > 0 , df'Week_Number']+52)                   
+    df['Week_Number'].where(df['Week_Number'] > 0 , other = df['Week_Number']+52, inplace = True)                   
     
-    
+def xxxxx(df):  
     ##add points for away and home team : win 3 points, draw 1 point, loss 0 point
     df['HP']=np.select([df['FTR']=='H',df['FTR']=='D',df['FTR']=='A'],[3,1,0])
     df['AP']=np.select([df['FTR']=='H',df['FTR']=='D',df['FTR']=='A'],[0,1,3])
     ## add difference in goals for home and away team
-    df['HGD']=df['FTHG']-df[year]['FTAG']
-    df['AGD']= df['FTHG']+df[year]['FTAG']
+    df['HGD']=df['FTHG']-df['FTAG']
+    df['AGD']= df['FTHG']+df['FTAG']
    
     print('Creating league positions')
     
     #CREATE RUNNING LEAGUE TABLE FIND NAMES OF TEAMS IN THE LEAGUE
-    team_list = np.array(df[year].HomeTeam.unique()).tolist()
-    team_points = pd.DataFrame(0,index = np.array(df[year].HomeTeam.unique()).tolist() , columns = df[year].Week_Number.unique())
-    team_cumsum = pd.DataFrame(0,index = np.array(df[year].HomeTeam.unique()).tolist() , columns = df[year].Week_Number.unique())
-    league_position = pd.DataFrame(0,index = np.array(df[year].HomeTeam.unique()).tolist() , columns = df[year].Week_Number.unique())
-    team_goal_difference = pd.DataFrame(0,index = np.array(df[year].HomeTeam.unique()).tolist() , columns = df[year].Week_Number.unique())
-    team_goal_difference_cumsum = pd.DataFrame(0,index = np.array(df[year].HomeTeam.unique()).tolist() , columns = df[year].Week_Number.unique())
-    form = pd.DataFrame(0,index = np.array(df[year].HomeTeam.unique()).tolist() , columns = df[year].Week_Number.unique())
+    team_list = np.array(df.HomeTeam.unique()).tolist()
+    team_points = pd.DataFrame(0,index = np.array(df.HomeTeam.unique()).tolist() , columns = df.Week_Number.unique())
+    team_cumsum = pd.DataFrame(0,index = np.array(df.HomeTeam.unique()).tolist() , columns = df.Week_Number.unique())
+    league_position = pd.DataFrame(0,index = np.array(df.HomeTeam.unique()).tolist() , columns = df.Week_Number.unique())
+    team_goal_difference = pd.DataFrame(0,index = np.array(df.HomeTeam.unique()).tolist() , columns = df.Week_Number.unique())
+    team_goal_difference_cumsum = pd.DataFrame(0,index = np.array(df.HomeTeam.unique()).tolist() , columns = df.Week_Number.unique())
+    form = pd.DataFrame(0,index = np.array(df.HomeTeam.unique()).tolist() , columns = df.Week_Number.unique())
     # FOR EACH WEEK ASSIGN POINTS TO TEAMS 
-    for week in df[year].Week_Number.unique():
+    for week in df.Week_Number.unique():
         for team in team_list:
             # IF THERE ARE ENTRIES IN HOME TEAM SUM THE POINTS IN HP AND PUT IN TEAM POINTS
-            if len(df[year].HP[(df[year].Week_Number == week) & (df[year]['HomeTeam'].str.contains(team))]) > 0:
-                team_points.loc[team,week] = int(df[year].HP[(df[year].Week_Number == week) & (df[year]['HomeTeam'].str.contains(team))].sum())
-                team_goal_difference.loc[team,week] = int(df[year].HGD[(df[year].Week_Number == week) & (df[year]['HomeTeam'].str.contains(team))].sum())
+            if len(df.HP[(df.Week_Number == week) & (df['HomeTeam'].str.contains(team))]) > 0:
+                team_points.loc[team,week] = int(df.HP[(df.Week_Number == week) & (df['HomeTeam'].str.contains(team))].sum())
+                team_goal_difference.loc[team,week] = int(df.HGD[(df.Week_Number == week) & (df['HomeTeam'].str.contains(team))].sum())
                 # IF THERE ARE ENTRIES IN AWAY TEAM SUM THE POINTS IN AP AND PUT IN TEAM POINTS
-            if len(df[year].AP[(df[year].Week_Number == week) & (df[year]['AwayTeam'].str.contains(team))]) > 0:
-                team_points.loc[team,week] = team_points.loc[team,week] + int(df[year].AP[(df[year].Week_Number == week) & (df[year]['AwayTeam'].str.contains(team))].sum())
-                team_goal_difference.loc[team,week] = int(df[year].AGD[(df[year].Week_Number == week) & (df[year]['AwayTeam'].str.contains(team))].sum())
+            if len(df.AP[(df.Week_Number == week) & (df['AwayTeam'].str.contains(team))]) > 0:
+                team_points.loc[team,week] = team_points.loc[team,week] + int(df.AP[(df.Week_Number == week) & (df['AwayTeam'].str.contains(team))].sum())
+                team_goal_difference.loc[team,week] = int(df.AGD[(df.Week_Number == week) & (df['AwayTeam'].str.contains(team))].sum())
             form.loc[team,week] = np.mean(team_points.loc[team,week-5:week])
     # CREATE CUMULATIVE TOTAL
     team_cumsum = team_points.cumsum(axis=1)
@@ -118,22 +114,22 @@ def preprocess(df):
     # GIVE LEAGUE POSITION
     league_position = team_cumsum.rank(axis = 0, method = 'min',ascending = False)
     
-    print('Putting back into Dataframe ' + str(year))
+    print('Putting back into Dataframe ')
     # REASSIGN TO THE ENTRY IN THE DATA.
-    df[year]['H_LP'] = pd.Series(0, index=df[year].index)
-    df[year]['A_LP'] = pd.Series(0, index=df[year].index)
-    df[year]['H_Form'] = pd.Series(0, index=df[year].index)
-    df[year]['A_Form'] = pd.Series(0, index=df[year].index)
-    for week in df[year].Week_Number.unique():
+    df['H_LP'] = pd.Series(0, index=df.index)
+    df['A_LP'] = pd.Series(0, index=df.index)
+    df['H_Form'] = pd.Series(0, index=df.index)
+    df['A_Form'] = pd.Series(0, index=df.index)
+    for week in df.Week_Number.unique():
         for team in team_list:
-            df[year].loc[(df[year].Week_Number == week) & (df[year]['HomeTeam'].str.contains(team)), 'H_LP'] = league_position.loc[team,week]
-            df[year].loc[(df[year].Week_Number == week) & (df[year]['AwayTeam'].str.contains(team)), 'A_LP'] = league_position.loc[team,week]
-            df[year].loc[(df[year].Week_Number == week) & (df[year]['HomeTeam'].str.contains(team)), 'HGD'] = team_goal_difference_cumsum.loc[team,week]
-            df[year].loc[(df[year].Week_Number == week) & (df[year]['AwayTeam'].str.contains(team)), 'AGD'] = team_goal_difference_cumsum.loc[team,week]
-            df[year].loc[(df[year].Week_Number == week) & (df[year]['HomeTeam'].str.contains(team)), 'H_Form'] = form.loc[team,week]
-            df[year].loc[(df[year].Week_Number == week) & (df[year]['AwayTeam'].str.contains(team)), 'A_Form'] = form.loc[team,week]
+            df.loc[(df.Week_Number == week) & (df['HomeTeam'].str.contains(team)), 'H_LP'] = league_position.loc[team,week]
+            df.loc[(df.Week_Number == week) & (df['AwayTeam'].str.contains(team)), 'A_LP'] = league_position.loc[team,week]
+            df.loc[(df.Week_Number == week) & (df['HomeTeam'].str.contains(team)), 'HGD'] = team_goal_difference_cumsum.loc[team,week]
+            df.loc[(df.Week_Number == week) & (df['AwayTeam'].str.contains(team)), 'AGD'] = team_goal_difference_cumsum.loc[team,week]
+            df.loc[(df.Week_Number == week) & (df['HomeTeam'].str.contains(team)), 'H_Form'] = form.loc[team,week]
+            df.loc[(df.Week_Number == week) & (df['AwayTeam'].str.contains(team)), 'A_Form'] = form.loc[team,week]
                             
-make_data(data_by_season)
+#make_data(data_by_season)
 
 
 #'''      

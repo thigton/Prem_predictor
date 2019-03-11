@@ -12,3 +12,6 @@ print(fid)
 data = pd.read_csv(data_loc + fid[0] + '.csv', sep = ',', usecols=['Date','HomeTeam','AwayTeam','FTHG','FTAG','FTR','HS','AS','HST','AST'
     ,'HF','AF','WHH','WHD','WHA'])
 print(data.head())
+PL.preprocess(data)
+print(type(data['Date'][0]))
+PL.weeknumbers(data)
