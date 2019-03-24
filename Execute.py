@@ -8,10 +8,30 @@ data_loc = '/Users/Tom/Box/Personal/10 Other/PL_Predictions/PL_data/'
 # Get file ids
 fid = PL.get_fid('./PL_data','.csv')['.csv']
 
-print(fid)
 data = pd.read_csv(data_loc + fid[0] + '.csv', sep = ',', usecols=['Date','HomeTeam','AwayTeam','FTHG','FTAG','FTR','HS','AS','HST','AST'
     ,'HF','AF','WHH','WHD','WHA'])
-print(data.head())
-PL.preprocess(data)
-print(type(data['Date'][0]))
-PL.weeknumbers(data)
+
+# --------------------------------------------------
+
+# Remove NaNs in the date and change to date format
+PL.date_clean(data)
+
+# Team list in the league that year
+teams = PL.team_list(data)
+# Games Played
+season_length = PL.games_played(data,teams)
+# Goals For
+PL.goals_scored(data, teams, season_length)
+# Goals difference
+PL.goal_difference(data, teams, season_length)
+data[['H_Goals Diff (Ave)', 'H_Goals For (Ave)', 'H_Goals Against (Ave)']].to_csv('test.csv')
+
+exit()
+
+
+# create features
+PL.league_positions(data, teams ,season_length) # League Postions
+print(data.tail(10))
+exit()
+
+
