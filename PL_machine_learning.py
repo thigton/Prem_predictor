@@ -182,17 +182,23 @@ def league_positions(df,team_list,season_length):
 
 
 
-def team_form(df, team_list, week_numbers, numberofweeks = 5):
-    '''Create team form for the last n weeks'''
-    team_point = team_points(df,team_list, week_numbers)
-    for week in week_numbers:
-        for team in team_list:
-            form.loc[team,week] = np.mean(team_point.loc[team,week - numberofweeks:week])
-            
-    
-    
-    
+def team_form(df, team_list, season_length, numberofgames = 5, Home = True, Away = True):
+    '''Create team form for the last n weeks
+    Home, bool : True if you want to include Home games
+    Home, bool : True if you want to include Home games'''
 
-                            
+    team_point = team_points(df,team_list, season_length)
+    for week in range(season_length):
+        for team in team_list:
+            form.loc[team,week] = [np.mean(team_point.loc[team, week - numberofgames : week])
+
+    reassign_matrix_to_df(df, team_list, season_length,'Form',form)
+
+
+def home_away(df, team_list, season_length):
+    mat = team_week_matrix(df, team_list, season_length)
+
+
+       
 
 
